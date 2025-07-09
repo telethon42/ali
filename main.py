@@ -7,7 +7,7 @@ BOT_OWNER_ID = 8177034443
 API_ID = 11765349
 API_HASH = "67d3351652cc42239a42df8c17186d49"
 
-sessions ="AgE-_xcAYbdrc4TG0DNWw1I7ZerniRO7BO3RNEbRXSt3lSIpNYj-yH15nWdryGagqT2NEM_GHDMn8txw_Fs8wZlA6t2olzWLf-bDxkAawCQmu4cdM03nfuRfnT4IILwJ3P9gtQI5GwvnrJYcIlsf6bvocllu9jox7niXwALh6pAm66Tzz_BqHXGd7gK16wkHmSOo9h5LTTqmXtMFItffn9vStkOVbJzi-fboVPDxzSldt3ekp_iGhH4nkqdVK1F5nuOKHOrgw8h9bzKF-lawS3-3lMaqBUU3Qi82bazM3UEzQ99Wxv2UBdnhWlEUvfCpXrwUyzmhfe912XJglxi3om0_Me77SAAAAAHnY6TLAA"
+sessions ={} 
 
 app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
