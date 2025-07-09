@@ -2,12 +2,13 @@ from pyrogram import Client, filters
 from pyrogram.errors import PhoneCodeInvalid, SessionPasswordNeeded, PasswordHashInvalid
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-BOT_TOKEN = "7614011066:AAG319gvqxQq3GJY7CTGl113oSEqW60fd_o"
-BOT_OWNER_ID = 8177034443
 API_ID = 11765349
 API_HASH = "67d3351652cc42239a42df8c17186d49"
+BOT_TOKEN = "7614011066:AAG319gvqxQq3GJY7CTGl113oSEqW60fd_o"
+BOT_OWNER_ID = 8177034443
 
-sessions ={} 
+# تخزين حالة المستخدمين
+sessions = {}
 
 app = Client("bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
@@ -17,10 +18,9 @@ async def session_handler(client, message):
     user_id = message.from_user.id
     text = message.text.strip()
 
-    # أول مرة: اطلب api_id
     if user_id not in sessions:
         sessions[user_id] = {"step": "api_id"}
-        return await message.reply("📥 أرسل الـ api_id الخاص بك:")
+        return await message.reply("📥 أرسل الـ API ID:")
 
     user = sessions[user_id]
 
@@ -29,12 +29,12 @@ async def session_handler(client, message):
             return await message.reply("❌ يجب أن يكون api_id رقم.")
         user["api_id"] = int(text)
         user["step"] = "api_hash"
-        return await message.reply("📥 أرسل الـ api_hash:")
+        return await message.reply("📥 أرسل الـ API HASH:")
 
     if user["step"] == "api_hash":
         user["api_hash"] = text
         user["step"] = "phone"
-        return await message.reply("📞 أرسل رقم هاتفك مع رمز الدولة (مثال: +964...)")
+        return await message.reply("📱 أرسل رقم هاتفك مع رمز الدولة (مثال: +964...)")
 
     if user["step"] == "phone":
         user["phone"] = text
@@ -47,17 +47,18 @@ async def session_handler(client, message):
                 in_memory=True
             )
             await temp_client.connect()
-            await temp_client.send_code(user["phone"])
+            sent = await temp_client.send_code(user["phone"])
             user["client"] = temp_client
+            user["phone_code_hash"] = sent.phone_code_hash
             user["step"] = "code"
-            return await message.reply("📨 تم إرسال كود التحقق.\n📩 أرسل الرمز الآن:")
+            return await message.reply("📨 تم إرسال الكود.\n✉️ أرسل كود التحقق:")
         except Exception as e:
             sessions.pop(user_id)
-            return await message.reply(f"❌ خطأ أثناء الإرسال:\n{e}")
+            return await message.reply(f"❌ خطأ أثناء الإرسال:\n`{e}`")
 
     if user["step"] == "code":
         try:
-            await user["client"].sign_in(user["phone"], text)
+            await user["client"].sign_in(user["phone"], user["phone_code_hash"], text)
             string = await user["client"].export_session_string()
             await message.reply(
                 "✅ تم إنشاء الجلسة بنجاح!",
@@ -75,7 +76,7 @@ async def session_handler(client, message):
             await user["client"].disconnect()
             sessions.pop(user_id)
         except PhoneCodeInvalid:
-            return await message.reply("❌ الرمز خاطئ! أرسله مرة أخرى.")
+            return await message.reply("❌ الكود خاطئ! أرسله من جديد.")
         except SessionPasswordNeeded:
             user["step"] = "password"
             return await message.reply("🔐 الحساب عليه تحقق بخطوتين.\n📌 أرسل كلمة السر:")
@@ -102,7 +103,7 @@ async def session_handler(client, message):
         except PasswordHashInvalid:
             return await message.reply("❌ كلمة السر خاطئة! حاول مجددًا.")
         except Exception as e:
-            return await message.reply(f"❌ خطأ:\n{e}")
+            return await message.reply(f"❌ خطأ:\n`{e}`")
 
 
 @app.on_callback_query(filters.regex(r"copy\|(.+)"))
